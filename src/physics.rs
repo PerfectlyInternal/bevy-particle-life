@@ -29,7 +29,7 @@ const K: f32 = 1000000.0;
 const BORDER_DISTANCE: f32 = 5000.0;
 const MAX_SPEED: f32 = 1000.0;
 const MAX_INTERACTION_DISTANCE: f32 = 500.0;
-const DAMPING_COEFF: f32 = 0.999;
+const DAMPING_COEFF: f32 = 1.0;//0.999;
 
 #[derive(Resource)]
 pub struct TotalKineticEnergy(pub f32);
@@ -38,6 +38,7 @@ fn update_kinetic_energy(
     mut kenergy: ResMut<TotalKineticEnergy>,
     q: Query<&Velocity>,
 ) {
+    kenergy.0 = 0.0;
     for velocity in q.iter() {
         kenergy.0 += velocity.0.length().powf(2.0);
     }

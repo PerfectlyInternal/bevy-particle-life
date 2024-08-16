@@ -74,7 +74,7 @@ fn setup_ui(
                 }
             ),
             TextSection::new(
-                " GJ",
+                " MJ",
                 TextStyle {
                     font_size: 40.0,
                     ..default()
@@ -105,7 +105,7 @@ fn update_kinetic_energy(
     mut q: Query<&mut Text, With<KineticEnergyText>>,
 ) {
     let mut text = q.single_mut();
-    let value = energy.0 / 1_000_000_000.0;
+    let value = energy.0 / 1_000_000.0;
     text.sections[1].value = format!("{value:.2}");
 }
 

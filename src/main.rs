@@ -8,11 +8,11 @@ mod physics;
 fn main() {
     App::new()
         .add_plugins((
-                DefaultPlugins,
-                ui::UIPlugin,
-                asset::AssetPlugin,
-                particle::ParticlePlugin,
-                physics::PhysicsPlugin { parallel: true }
+            DefaultPlugins,
+            ui::UIPlugin,
+            asset::AssetPlugin,
+            particle::ParticlePlugin,
+            physics::PhysicsPlugin { parallel: true }
         ))
         .run();
 }
