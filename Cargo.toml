@@ -1,0 +1,9 @@
+[package]
+name = "bevy-particle-life"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.14.1"
+bevy_pancam = "0.13.0"
+rand = "0.8.5"
