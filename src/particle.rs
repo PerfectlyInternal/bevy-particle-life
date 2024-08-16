@@ -25,14 +25,6 @@ impl Plugin for ParticlePlugin {
 }
 
 #[derive(Component)]
-#[allow(dead_code)]
-enum ParticleType {
-    RED,
-    GREEN,
-    BLUE
-}
-
-#[derive(Component)]
 pub struct Velocity(pub Vec2);
 
 #[derive(Component)]
