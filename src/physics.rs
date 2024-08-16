@@ -26,10 +26,10 @@ impl Plugin for PhysicsPlugin {
 }
 
 const K: f32 = 1000000.0;
-const BORDER_DISTANCE: f32 = 1000.0;
+const BORDER_DISTANCE: f32 = 5000.0;
 const MAX_SPEED: f32 = 1000.0;
-const MAX_INTERACTION_DISTANCE: f32 = 250.0;
-const DAMPING_COEFF: f32 = 0.999;
+const MAX_INTERACTION_DISTANCE: f32 = 500.0;
+const DAMPING_COEFF: f32 = 1.0;//0.999;
 
 #[derive(Resource)]
 pub struct TotalKineticEnergy(pub f32);
@@ -38,6 +38,7 @@ fn update_kinetic_energy(
     mut kenergy: ResMut<TotalKineticEnergy>,
     q: Query<&Velocity>,
 ) {
+    kenergy.0 = 0.0;
     for velocity in q.iter() {
         kenergy.0 += velocity.0.length().powf(2.0);
     }
@@ -96,7 +97,7 @@ fn calculate_particle_force(
     let distance = delta.length();
     if distance > MAX_INTERACTION_DISTANCE { return Vec3::ZERO; }
     let force = K * ((charge_a * charge_b) / f32::powf(distance, 2.0));
-    return force * direction;
+    force * direction
 }
 
 fn border_interaction(

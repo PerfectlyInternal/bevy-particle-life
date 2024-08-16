@@ -25,14 +25,6 @@ impl Plugin for ParticlePlugin {
 }
 
 #[derive(Component)]
-#[allow(dead_code)]
-enum ParticleType {
-    RED,
-    GREEN,
-    BLUE
-}
-
-#[derive(Component)]
 pub struct Velocity(pub Vec2);
 
 #[derive(Component)]
@@ -60,11 +52,13 @@ struct EmmiterTimer {
 }
 
 #[derive(Resource)]
-pub struct ParticleCounter(pub i16);
+pub struct ParticleCounter(pub u16);
 
 const DELETION_RADIUS: f32 = 10.0;
 const SPAWN_VELOCITY: f32 = 250.0;
-const MAX_PARTICLE_COUNT: i16 = 200;
+const MAX_PARTICLE_COUNT: u16 = 2500;
+const SPAWN_TIME_MSEC: u64 = 100;
+const EMMITER_COUNT: u16 = 10;
 
 #[allow(dead_code)]
 fn spawn_random_particles(
@@ -98,7 +92,7 @@ fn spawn_random_particles(
 fn spawn_emmiters(
     mut commands: Commands,
 ) {
-    for _i in 0..5 {
+    for _i in 0..EMMITER_COUNT {
         let positive = true;//random::<bool>();
         let x = random::<f32>() * 1000.0;
         let y = random::<f32>() * 1000.0;
@@ -113,7 +107,9 @@ fn spawn_emmiters(
 
     commands.insert_resource(
         EmmiterTimer {
-            timer: Timer::new(Duration::from_millis(250), TimerMode::Repeating),
+            timer: Timer::new(
+                       Duration::from_millis(SPAWN_TIME_MSEC),
+                       TimerMode::Repeating),
         }
     );
 }
@@ -158,7 +154,8 @@ fn cancel_collided_particles(
 ) {
     let mut pairs = q.iter_combinations_mut();
     while let Some(
-        [(mut cancelled_a, Charge(charge_a), transform_a), (mut cancelled_b, Charge(charge_b), transform_b)]
+        [(mut cancelled_a, Charge(charge_a), transform_a),
+         (mut cancelled_b, Charge(charge_b), transform_b)]
     ) = pairs.fetch_next() {
         let distance = transform_a.translation.distance(transform_b.translation);
         if charge_a * charge_b < 0.0 && distance < DELETION_RADIUS {
