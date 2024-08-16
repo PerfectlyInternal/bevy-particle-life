@@ -1,4 +1,7 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
+};
 use bevy_pancam::{PanCam, PanCamPlugin};
 
 mod asset;
@@ -7,11 +10,22 @@ mod physics;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(PanCamPlugin::default())
-        .add_plugins(asset::AssetPlugin)
-        .add_plugins(particle::ParticlePlugin)
-        .add_plugins(physics::PhysicsPlugin)
+        .add_plugins((
+                DefaultPlugins,
+                FpsOverlayPlugin {
+                    config: FpsOverlayConfig {
+                        text_config: TextStyle {
+                            font_size: 50.0,
+                            color: Color::srgb(0.0, 1.0, 0.0),
+                            font: default(),
+                        }
+                    }
+                },
+                PanCamPlugin::default(),
+                asset::AssetPlugin,
+                particle::ParticlePlugin,
+                physics::PhysicsPlugin
+        ))
         .add_systems(Startup, setup_camera)
         .run();
 }

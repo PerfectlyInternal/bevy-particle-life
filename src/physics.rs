@@ -8,11 +8,15 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update,
             (apply_particle_forces,
+             border_interaction,
+             limit_speed,
              apply_particle_velocities).chain());
     }
 }
 
 const K: f32 = 1000000.0;
+const BORDER_DISTANCE: f32 = 1000.0;
+const MAX_SPEED: f32 = 1000.0;
 
 fn apply_particle_forces(
     time: Res<Time>,
@@ -32,11 +36,37 @@ fn apply_particle_forces(
     }
 }
 
+fn border_interaction(
+    mut q: Query<(&mut Velocity, &Transform)>
+) {
+    q.par_iter_mut().for_each(|(mut velocity, transform)| {
+        if transform.translation.x > BORDER_DISTANCE {
+            velocity.0.x = velocity.0.x.copysign(-1.0);
+        } else if transform.translation.x < -BORDER_DISTANCE {
+            velocity.0.x = velocity.0.x.copysign(1.0);
+        }
+        if transform.translation.y > BORDER_DISTANCE {
+            velocity.0.y = velocity.0.y.copysign(-1.0);
+        } else if transform.translation.y < -BORDER_DISTANCE {
+            velocity.0.y = velocity.0.y.copysign(1.0);
+        }
+    });
+}
+
+fn limit_speed(
+    mut q: Query<&mut Velocity>
+) {
+    q.par_iter_mut().for_each(|mut velocity| {
+        velocity.0 = velocity.0.clamp_length_max(MAX_SPEED);
+    });
+}
+
+
 fn apply_particle_velocities(
     time: Res<Time>,
     mut q: Query<(&mut Transform, &Velocity)>
 ) {
-    for (mut transform, velocity) in &mut q {
+    q.par_iter_mut().for_each(|(mut transform, velocity)| {
         transform.translation += velocity.0.extend(0.0) * time.delta_seconds();
-    }
+    });
 }

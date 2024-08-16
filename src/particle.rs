@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    time::Duration,
+    f32::consts::TAU,
+};
 use bevy:: {
     prelude::*,
     sprite::MaterialMesh2dBundle,
@@ -87,7 +90,7 @@ fn spawn_emmiters(
     mut commands: Commands,
 ) {
     for _i in 0..5 {
-        let positive = random::<bool>();
+        let positive = true;//random::<bool>();
         let x = random::<f32>() * 1000.0;
         let y = random::<f32>() * 1000.0;
 
@@ -116,9 +119,10 @@ fn emit_particles(
     emitter_timer.timer.tick(time.delta());
     if emitter_timer.timer.finished() {
         for emmiter in q.iter() {
+            let dir = random::<f32>() * TAU;
             let vel = Vec2 {
-                x: (random::<f32>() * SPAWN_VELOCITY * 2.0) - (SPAWN_VELOCITY),
-                y: (random::<f32>() * SPAWN_VELOCITY * 2.0) - (SPAWN_VELOCITY)
+                x: dir.sin() * SPAWN_VELOCITY,
+                y: dir.cos() * SPAWN_VELOCITY,
             };
             commands.spawn((
                 Particle {
@@ -136,8 +140,6 @@ fn emit_particles(
         }
     }
 }
-
-
 
 fn cancel_collided_particles(
     mut q: Query<(&mut Cancelled, &Charge, &Transform)>
