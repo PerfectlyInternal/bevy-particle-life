@@ -26,9 +26,9 @@ impl Plugin for PhysicsPlugin {
 }
 
 const K: f32 = 1000000.0;
-const BORDER_DISTANCE: f32 = 1000.0;
+const BORDER_DISTANCE: f32 = 5000.0;
 const MAX_SPEED: f32 = 1000.0;
-const MAX_INTERACTION_DISTANCE: f32 = 250.0;
+const MAX_INTERACTION_DISTANCE: f32 = 500.0;
 const DAMPING_COEFF: f32 = 0.999;
 
 #[derive(Resource)]
