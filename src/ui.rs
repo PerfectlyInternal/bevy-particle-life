@@ -17,7 +17,7 @@ pub struct UIPlugin;
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(PanCamPlugin::default());
+        app.add_plugins(PanCamPlugin);
         app.add_plugins(FpsOverlayPlugin::default());
         app.add_systems(Startup, (setup_ui, setup_camera));
         app.add_systems(Update, (update_counter, update_kinetic_energy));
