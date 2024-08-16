@@ -14,7 +14,8 @@ pub struct ParticlePlugin;
 
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (spawn_random_particles, spawn_emmiters));
+        app.insert_resource(ParticleCounter(0));
+        app.add_systems(Startup, spawn_emmiters);
         app.add_systems(Update, (
                 emit_particles,
                 cancel_collided_particles,
@@ -58,12 +59,18 @@ struct EmmiterTimer {
     timer: Timer
 }
 
+#[derive(Resource)]
+pub struct ParticleCounter(pub i16);
+
 const DELETION_RADIUS: f32 = 10.0;
 const SPAWN_VELOCITY: f32 = 250.0;
+const MAX_PARTICLE_COUNT: i16 = 200;
 
+#[allow(dead_code)]
 fn spawn_random_particles(
     mut commands: Commands,
     assets: Res<ParticleAssets>,
+    mut counter: ResMut<ParticleCounter>,
 ) { 
     for _i in 0..100 {
         let positive = random::<bool>();
@@ -83,6 +90,8 @@ fn spawn_random_particles(
                 ..default()
             }
         ));
+
+        counter.0 += 1;
     }
 }
 
@@ -113,11 +122,12 @@ fn emit_particles(
     mut commands: Commands,
     assets: Res<ParticleAssets>,
     time: Res<Time>,
+    mut counter: ResMut<ParticleCounter>,
     mut emitter_timer: ResMut<EmmiterTimer>,
     q: Query<&Emmiter>,
 ) {
     emitter_timer.timer.tick(time.delta());
-    if emitter_timer.timer.finished() {
+    if emitter_timer.timer.finished() && counter.0 < MAX_PARTICLE_COUNT {
         for emmiter in q.iter() {
             let dir = random::<f32>() * TAU;
             let vel = Vec2 {
@@ -137,6 +147,8 @@ fn emit_particles(
                     ..default()
                 }
             ));
+
+            counter.0 += 1;
         }
     }
 }
@@ -158,11 +170,13 @@ fn cancel_collided_particles(
 
 fn delete_cancelled_particles(
     mut commands: Commands,
+    mut counter: ResMut<ParticleCounter>,
     q: Query<(Entity, &Cancelled)>,
 ) {
     for (entity, cancelled) in q.iter() {
         if cancelled.0 {
             commands.entity(entity).despawn();
+            counter.0 -= 1;
         }
     }
 }

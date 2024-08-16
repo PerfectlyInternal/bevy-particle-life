@@ -2,38 +2,101 @@ use bevy::prelude::*;
 
 use crate::particle::*;
 
-pub struct PhysicsPlugin;
+pub struct PhysicsPlugin {
+    pub parallel: bool,
+}
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update,
-            (apply_particle_forces,
-             border_interaction,
-             limit_speed,
-             apply_particle_velocities).chain());
+        app.insert_resource(TotalKineticEnergy(0.0));
+        app.add_systems(Update, update_kinetic_energy);
+        if self.parallel {
+            app.add_systems(Update,
+                (apply_particle_forces_parallel,
+                 (border_interaction, limit_speed),
+                 apply_particle_velocities).chain());
+        } else {
+            app.add_systems(Update,
+                (apply_particle_forces_combination,
+                 (border_interaction, limit_speed),
+                 apply_particle_velocities).chain());
+
+        }
     }
 }
 
 const K: f32 = 1000000.0;
 const BORDER_DISTANCE: f32 = 1000.0;
 const MAX_SPEED: f32 = 1000.0;
+const MAX_INTERACTION_DISTANCE: f32 = 250.0;
+const DAMPING_COEFF: f32 = 0.999;
 
-fn apply_particle_forces(
-    time: Res<Time>,
-    mut q: Query<(&mut Velocity, &Charge, &Transform)>
+#[derive(Resource)]
+pub struct TotalKineticEnergy(pub f32);
+
+fn update_kinetic_energy(
+    mut kenergy: ResMut<TotalKineticEnergy>,
+    q: Query<&Velocity>,
 ) {
-    let mut pairs = q.iter_combinations_mut();
-    while let Some(
-        [(mut velocity_a, Charge(charge_a), transform_a),
-         (mut velocity_b, Charge(charge_b), transform_b)]
-    ) = pairs.fetch_next() {
-        let delta = transform_a.translation - transform_b.translation;
-        let direction = delta.normalize();
-        let distance = delta.length();
-        let force = K * ((charge_a * charge_b) / f32::powf(distance, 2.0));
-        velocity_a.0 += direction.xy() * force * time.delta_seconds();
-        velocity_b.0 += -direction.xy() * force * time.delta_seconds();
+    for velocity in q.iter() {
+        kenergy.0 += velocity.0.length().powf(2.0);
     }
+}
+
+fn apply_particle_forces_combination(
+    time: Res<Time>,
+    mut q: Query<(&mut Velocity, &Charge, &Transform)>,
+) {
+    let mut combinations = q.iter_combinations_mut();
+    while let Some(
+        [(mut velocity_a, charge_a, transform_a),
+         (mut velocity_b, charge_b, transform_b)])
+        = combinations.fetch_next()
+    {
+        let force = calculate_particle_force(
+                transform_a.translation,
+                transform_b.translation,
+                charge_a.0,
+                charge_b.0
+        );
+        velocity_a.0 += (force * time.delta_seconds()).xy();
+        velocity_b.0 -= (force * time.delta_seconds()).xy();
+    }
+}
+
+fn apply_particle_forces_parallel(
+    time: Res<Time>,
+    mut q: Query<(&mut Velocity, &Charge, &Transform)>,
+    q2: Query<(&Charge, &Transform)>
+) {
+    q.par_iter_mut().for_each(|(mut velocity_a, charge_a, transform_a)| {
+        for (charge_b, transform_b) in q2.iter() {
+            if transform_a == transform_b {
+                continue;
+            }
+            let force = calculate_particle_force(
+                transform_a.translation,
+                transform_b.translation,
+                charge_a.0,
+                charge_b.0
+            );
+            velocity_a.0 += (force * time.delta_seconds()).xy();
+        }
+    });
+}
+
+fn calculate_particle_force(
+    pos_a: Vec3,
+    pos_b: Vec3,
+    charge_a: f32,
+    charge_b: f32
+) -> Vec3 {
+    let delta = pos_a - pos_b;
+    let direction = delta.normalize_or_zero();
+    let distance = delta.length();
+    if distance > MAX_INTERACTION_DISTANCE { return Vec3::ZERO; }
+    let force = K * ((charge_a * charge_b) / f32::powf(distance, 2.0));
+    return force * direction;
 }
 
 fn border_interaction(
@@ -57,7 +120,7 @@ fn limit_speed(
     mut q: Query<&mut Velocity>
 ) {
     q.par_iter_mut().for_each(|mut velocity| {
-        velocity.0 = velocity.0.clamp_length_max(MAX_SPEED);
+        velocity.0 = velocity.0.clamp_length_max(MAX_SPEED) * DAMPING_COEFF;
     });
 }
 
