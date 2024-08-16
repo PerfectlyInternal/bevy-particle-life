@@ -4,6 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = "0.14.1"
+
 bevy_pancam = "0.13.0"
 rand = "0.8.5"
+
+[dependencies.bevy]
+version = "0.14.1"
+default-features = true
+features = ["dynamic_linking", "wayland"]
+
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]

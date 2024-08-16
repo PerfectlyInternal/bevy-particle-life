@@ -1,13 +1,17 @@
 use bevy::prelude::*;
 use bevy_pancam::{PanCam, PanCamPlugin};
 
+mod asset;
 mod particle;
+mod physics;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(PanCamPlugin::default())
+        .add_plugins(asset::AssetPlugin)
         .add_plugins(particle::ParticlePlugin)
+        .add_plugins(physics::PhysicsPlugin)
         .add_systems(Startup, setup_camera)
         .run();
 }
