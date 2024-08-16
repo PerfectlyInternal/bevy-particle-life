@@ -154,7 +154,8 @@ fn cancel_collided_particles(
 ) {
     let mut pairs = q.iter_combinations_mut();
     while let Some(
-        [(mut cancelled_a, Charge(charge_a), transform_a), (mut cancelled_b, Charge(charge_b), transform_b)]
+        [(mut cancelled_a, Charge(charge_a), transform_a),
+         (mut cancelled_b, Charge(charge_b), transform_b)]
     ) = pairs.fetch_next() {
         let distance = transform_a.translation.distance(transform_b.translation);
         if charge_a * charge_b < 0.0 && distance < DELETION_RADIUS {

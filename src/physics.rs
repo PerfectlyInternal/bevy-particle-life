@@ -97,7 +97,7 @@ fn calculate_particle_force(
     let distance = delta.length();
     if distance > MAX_INTERACTION_DISTANCE { return Vec3::ZERO; }
     let force = K * ((charge_a * charge_b) / f32::powf(distance, 2.0));
-    return force * direction;
+    force * direction
 }
 
 fn border_interaction(
