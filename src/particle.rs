@@ -139,7 +139,7 @@ fn emit_particles(
                 MaterialMesh2dBundle {
                     mesh: assets.circle.clone(),
                     material: if emmiter.charge.0 > 0.0 { assets.red.clone() } else { assets.blue.clone() },
-                    transform: emmiter.transform.clone(), 
+                    transform: emmiter.transform, 
                     ..default()
                 }
             ));
