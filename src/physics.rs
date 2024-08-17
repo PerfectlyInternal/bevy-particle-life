@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::particle::*;
+use crate:: {
+    particle::*,
+    forcefield::*,
+    collider::*,
+};
 
 pub struct PhysicsPlugin {
     pub parallel: bool,
@@ -8,20 +12,17 @@ pub struct PhysicsPlugin {
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(ForcefieldPlugin { parallel: self.parallel });
+        app.add_plugins(ColliderPlugin { parallel: self.parallel });
         app.insert_resource(TotalKineticEnergy(0.0));
         app.add_systems(Update, update_kinetic_energy);
         if self.parallel {
-            app.add_systems(Update,
-                (apply_particle_forces_parallel,
-                 (border_interaction, limit_speed),
-                 apply_particle_velocities).chain());
+            app.add_systems(Update, apply_particle_forces_parallel);
         } else {
-            app.add_systems(Update,
-                (apply_particle_forces_combination,
-                 (border_interaction, limit_speed),
-                 apply_particle_velocities).chain());
-
+            app.add_systems(Update, apply_particle_forces_combination);
         }
+        app.add_systems(Update, (border_interaction, limit_speed));
+        app.add_systems(PostUpdate, apply_particle_velocities);
     }
 }
 
@@ -29,7 +30,7 @@ const K: f32 = 1000000.0;
 const BORDER_DISTANCE: f32 = 5000.0;
 const MAX_SPEED: f32 = 1000.0;
 const MAX_INTERACTION_DISTANCE: f32 = 500.0;
-const DAMPING_COEFF: f32 = 1.0;//0.999;
+const DAMPING_COEFF: f32 = 0.9995;
 
 #[derive(Resource)]
 pub struct TotalKineticEnergy(pub f32);

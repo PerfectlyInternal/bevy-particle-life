@@ -4,6 +4,8 @@ mod asset;
 mod ui;
 mod particle;
 mod physics;
+mod forcefield;
+mod collider;
 
 fn main() {
     App::new()
