@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use crate:: {
     particle::*,
-    forcefield::*,
-    collider::*,
+    forcefield::ForcefieldPlugin,
+    collider::ColliderPlugin,
 };
 
 pub struct PhysicsPlugin {
@@ -30,7 +30,7 @@ const K: f32 = 1000000.0;
 const BORDER_DISTANCE: f32 = 5000.0;
 const MAX_SPEED: f32 = 1000.0;
 const MAX_INTERACTION_DISTANCE: f32 = 500.0;
-const DAMPING_COEFF: f32 = 0.9995;
+const DAMPING_COEFF: f32 = 0.999;
 
 #[derive(Resource)]
 pub struct TotalKineticEnergy(pub f32);
@@ -102,18 +102,19 @@ fn calculate_particle_force(
 }
 
 fn border_interaction(
+    time: Res<Time>,
     mut q: Query<(&mut Velocity, &Transform)>
 ) {
     q.par_iter_mut().for_each(|(mut velocity, transform)| {
         if transform.translation.x > BORDER_DISTANCE {
-            velocity.0.x = velocity.0.x.copysign(-1.0);
+            velocity.0.x = velocity.0.x.copysign(-1.0) - 0.1 * time.delta_seconds();
         } else if transform.translation.x < -BORDER_DISTANCE {
-            velocity.0.x = velocity.0.x.copysign(1.0);
+            velocity.0.x = velocity.0.x.copysign(1.0) + 0.1 * time.delta_seconds();
         }
         if transform.translation.y > BORDER_DISTANCE {
-            velocity.0.y = velocity.0.y.copysign(-1.0);
+            velocity.0.y = velocity.0.y.copysign(-1.0) - 0.1 * time.delta_seconds();
         } else if transform.translation.y < -BORDER_DISTANCE {
-            velocity.0.y = velocity.0.y.copysign(1.0);
+            velocity.0.y = velocity.0.y.copysign(1.0) + 0.1 * time.delta_seconds();
         }
     });
 }

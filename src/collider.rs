@@ -4,10 +4,7 @@ use bevy::{
     math::bounding::Aabb2d,
 };
 
-use crate:: {
-    particle::*,
-    asset::*,
-};
+use crate::asset::ColliderAssets;
 
 pub struct ColliderPlugin {
     pub parallel: bool

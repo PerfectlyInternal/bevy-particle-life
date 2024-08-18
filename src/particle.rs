@@ -1,23 +1,22 @@
-use std::{
-    time::Duration,
-    f32::consts::TAU,
-};
+
 use bevy:: {
     prelude::*,
     sprite::MaterialMesh2dBundle,
 };
 use rand::random;
 
-use crate::asset::*;
+use crate::{
+    asset::ParticleAssets,
+    emmiter::EmmiterPlugin,
+};
 
 pub struct ParticlePlugin;
 
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ParticleCounter(0));
-        app.add_systems(Startup, spawn_emmiters);
+        app.add_plugins(EmmiterPlugin);
         app.add_systems(Update, (
-                emit_particles,
                 cancel_collided_particles,
                 delete_cancelled_particles
             ));
@@ -31,34 +30,23 @@ pub struct Velocity(pub Vec2);
 pub struct Charge(pub f32);
 
 #[derive(Component)]
-struct Cancelled(bool);
-
-#[derive(Bundle)]
-pub struct Particle {
-    velocity: Velocity,
-    charge: Charge,
-    cancelled: Cancelled,
-}
+pub struct Cancelled(pub bool);
 
 #[derive(Component)]
-struct Emmiter {
-    transform: Transform,
-    charge: Charge,
-}
+pub struct Particle;
 
-#[derive(Resource)]
-struct EmmiterTimer {
-    timer: Timer
+#[derive(Bundle)]
+pub struct ParticleBundle {
+    pub velocity: Velocity,
+    pub charge: Charge,
+    pub cancelled: Cancelled,
+    pub particle: Particle
 }
 
 #[derive(Resource)]
 pub struct ParticleCounter(pub u16);
 
 const DELETION_RADIUS: f32 = 10.0;
-const SPAWN_VELOCITY: f32 = 250.0;
-const MAX_PARTICLE_COUNT: u16 = 2500;
-const SPAWN_TIME_MSEC: u64 = 100;
-const EMMITER_COUNT: u16 = 10;
 
 #[allow(dead_code)]
 fn spawn_random_particles(
@@ -72,10 +60,11 @@ fn spawn_random_particles(
         let y = random::<f32>() * 1000.0;
 
         commands.spawn((
-            Particle {
+            ParticleBundle {
                 velocity: Velocity(Vec2::ZERO),
                 charge: if positive { Charge(1.0) } else { Charge(-1.0) },
-                cancelled: Cancelled(false)
+                cancelled: Cancelled(false),
+                particle: Particle
             },
             MaterialMesh2dBundle {
                 mesh: assets.circle.clone(),
@@ -86,66 +75,6 @@ fn spawn_random_particles(
         ));
 
         counter.0 += 1;
-    }
-}
-
-fn spawn_emmiters(
-    mut commands: Commands,
-) {
-    for _i in 0..EMMITER_COUNT {
-        let positive = true;//random::<bool>();
-        let x = random::<f32>() * 1000.0;
-        let y = random::<f32>() * 1000.0;
-
-        commands.spawn(
-            Emmiter {
-                transform: Transform::from_xyz(x, y, 0.0),
-                charge: if positive { Charge(1.0) } else { Charge(-1.0) },
-            }
-        );
-    }
-
-    commands.insert_resource(
-        EmmiterTimer {
-            timer: Timer::new(
-                       Duration::from_millis(SPAWN_TIME_MSEC),
-                       TimerMode::Repeating),
-        }
-    );
-}
-
-fn emit_particles(
-    mut commands: Commands,
-    assets: Res<ParticleAssets>,
-    time: Res<Time>,
-    mut counter: ResMut<ParticleCounter>,
-    mut emitter_timer: ResMut<EmmiterTimer>,
-    q: Query<&Emmiter>,
-) {
-    emitter_timer.timer.tick(time.delta());
-    if emitter_timer.timer.finished() && counter.0 < MAX_PARTICLE_COUNT {
-        for emmiter in q.iter() {
-            let dir = random::<f32>() * TAU;
-            let vel = Vec2 {
-                x: dir.sin() * SPAWN_VELOCITY,
-                y: dir.cos() * SPAWN_VELOCITY,
-            };
-            commands.spawn((
-                Particle {
-                    velocity: Velocity(vel),
-                    charge: Charge(emmiter.charge.0),
-                    cancelled: Cancelled(false),
-                },
-                MaterialMesh2dBundle {
-                    mesh: assets.circle.clone(),
-                    material: if emmiter.charge.0 > 0.0 { assets.red.clone() } else { assets.blue.clone() },
-                    transform: emmiter.transform, 
-                    ..default()
-                }
-            ));
-
-            counter.0 += 1;
-        }
     }
 }
 

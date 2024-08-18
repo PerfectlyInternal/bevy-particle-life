@@ -5,7 +5,7 @@ use bevy::{
 
 use crate:: {
     particle::*,
-    asset::*,
+    asset::ForcefieldAssets,
 };
 
 pub struct ForcefieldPlugin {

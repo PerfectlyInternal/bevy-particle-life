@@ -14,6 +14,12 @@ impl Plugin for AssetPlugin {
 }
 
 #[derive(Resource)]
+pub struct ProbeAssets {
+    pub triangle: Mesh2dHandle,
+    pub blue: Handle<ColorMaterial>,
+}
+
+#[derive(Resource)]
 pub struct ParticleAssets {
     pub circle: Mesh2dHandle,
     pub red: Handle<ColorMaterial>,
@@ -38,6 +44,18 @@ fn generate_assets(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
+    commands.insert_resource(
+        ProbeAssets {
+            triangle: Mesh2dHandle(meshes.add(
+                                Triangle2d::new(
+                                    Vec2::X * 250.0,
+                                    Vec2::new(-100.0, -100.0),
+                                    Vec2::new(-100.0, 100.0)
+                                ))),
+            blue: materials.add(Color::srgba(0.2, 0.2, 1.0, 0.25)),
+        }
+    );
+
     commands.insert_resource(
         ParticleAssets {
             circle: Mesh2dHandle(meshes.add(Circle { radius: 10.0 })),
